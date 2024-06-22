@@ -1,4 +1,5 @@
 using Oceananigans
+using Oceanostics.FlowDiagnostics: strain_rate_tensor_modulus_ccc
 
 grid = RectilinearGrid(size=(32, 32, 32), extent=(2π, 2π, 2π), topology=(Periodic, Periodic, Periodic))
 
@@ -55,6 +56,9 @@ u, v, w = model.velocities
 s = sqrt(u^2 + v^2)
 ω̃ = KernelFunctionOperation{Face, Face, Center}(ℱxy²ᵟ, grid, ω)
 @show compute!(Field(ω̃))
+
+S = KernelFunctionOperation{Center, Center, Center}(strain_rate_tensor_modulus_ccc, model.grid, u, v, w)
+@show compute!(Field(S))
 
 
 # We pass these operations to an output writer below to calculate and output them during the simulation.
