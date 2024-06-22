@@ -1,7 +1,17 @@
 using Oceananigans
-using Oceanostics.FlowDiagnostics: strain_rate_tensor_modulus_ccc
+using Statistics
+using Oceanostics.ProgressMessengers: BasicTimeMessenger
+#using Oceanostics.FlowDiagnostics: strain_rate_tensor_modulus_ccc
 
+#+++ get model
 grid = RectilinearGrid(size=(32, 32, 32), extent=(2π, 2π, 2π), topology=(Periodic, Periodic, Periodic))
+model = NonhydrostaticModel(; grid, timestepper = :RungeKutta3, advection = UpwindBiasedFifthOrder(), closure = SmagorinskyLilly())
+u, v, w = model.velocities
+uᵢ = rand(size(u)...); vᵢ = rand(size(v)...)
+uᵢ .-= mean(uᵢ); vᵢ .-= mean(vᵢ)
+set!(model, u=uᵢ, v=vᵢ)
+#---
+
 
 AG = Oceananigans.Grids.AbstractGrid
 @inline ℱx²ᵟ(i, j, k, grid::AG{FT}, ϕ) where FT = @inbounds FT(0.5) * ϕ[i, j, k] + FT(0.25) * (ϕ[i-1, j, k] + ϕ[i+1, j,  k])
@@ -17,61 +27,66 @@ AG = Oceananigans.Grids.AbstractGrid
 @inline ℱxz²ᵟ(i, j, k, grid, f, args...) = ℱz²ᵟ(i, j, k, grid, ℱz²ᵟ, f, args...)
 @inline ℱxyz²ᵟ(i, j, k, grid, f, args...) = ℱz²ᵟ(i, j, k, grid, ℱy²ᵟ, ℱx²ᵟ, args...)
 
-model = NonhydrostaticModel(; grid,
-                            timestepper = :RungeKutta3,
-                            advection = UpwindBiasedFifthOrder(),
-                            closure = SmagorinskyLilly())
 
-using Statistics
+@inline fψ_plus_gφ²(i, j, k, grid, f, ψ, g, φ) = (f(i, j, k, grid, ψ) + g(i, j, k, grid, φ))^2
 
-u, v, w = model.velocities
+function strain_rate_tensor_modulus_ccc(i, j, k, grid, u, v, w)
+    Sˣˣ² = ∂xᶜᶜᶜ(i, j, k, grid, u)^2
+    Sʸʸ² = ∂yᶜᶜᶜ(i, j, k, grid, v)^2
+    Sᶻᶻ² = ∂zᶜᶜᶜ(i, j, k, grid, w)^2
 
-uᵢ = rand(size(u)...)
-vᵢ = rand(size(v)...)
+    Sˣʸ² = ℑxyᶜᶜᵃ(i, j, k, grid, fψ_plus_gφ², ∂yᶠᶠᶜ, u, ∂xᶠᶠᶜ, v) / 4
+    Sˣᶻ² = ℑxzᶜᵃᶜ(i, j, k, grid, fψ_plus_gφ², ∂zᶠᶜᶠ, u, ∂xᶠᶜᶠ, w) / 4
+    Sʸᶻ² = ℑyzᵃᶜᶜ(i, j, k, grid, fψ_plus_gφ², ∂zᶜᶠᶠ, v, ∂yᶜᶠᶠ, w) / 4
 
-uᵢ .-= mean(uᵢ)
-vᵢ .-= mean(vᵢ)
+    return √(Sˣˣ² + Sʸʸ² + Sᶻᶻ² + 2 * (Sˣʸ² + Sˣᶻ² + Sʸᶻ²))
+end
 
-set!(model, u=uᵢ, v=vᵢ)
+ϕ_times_fψ(i, j, k, grid, ϕ, f::Function, ψ) = ϕ
+function MᵢⱼMᵢⱼ_ccc(i, j, k, grid, u, v, w, p)
+    S_abs = strain_rate_tensor_modulus_ccc(i, j, k, grid, u, v, w)
+
+    var"⟨|S|S₁₁⟩" = ℱxyz²ᵟ(i, j, k, grid, ϕ_times_ψ, S_abs, ∂xᶜᶜᶜ, u)
+
+    #m₁₁² = p.α^2 * p.β * S_abs * ∂xᶜᶜᶜ(i, j, k, grid, ℱxyz²δ, u)
+    #m₂₂² = p.α^2 * p.β * S_abs * ∂yᶜᶜᶜ(i, j, k, grid, ℱxyz²δ, v)
+    #m₃₃² = p.α^2 * p.β * S_abs * ∂zᶜᶜᶜ(i, j, k, grid, ℱxyz²δ, w)
+
+    Δ = 1
+    return 4*Δ^4
+end
+
+
 
 
 simulation = Simulation(model, Δt=0.2, stop_time=50)
 
 wizard = TimeStepWizard(cfl=0.7, max_change=1.1, max_Δt=0.5)
 simulation.callbacks[:wizard] = Callback(wizard, IterationInterval(10))
-
-using Printf
-function progress_message(sim)
-    max_abs_u = maximum(abs, sim.model.velocities.u)
-    walltime = prettytime(sim.run_wall_time)
-    return @info @sprintf("Iteration: %04d, time: %1.3f, Δt: %.2e, max(|u|) = %.1e, wall time: %s\n", iteration(sim), time(sim), sim.Δt, max_abs_u, walltime)
-end
-
-add_callback!(simulation, progress_message, IterationInterval(100))
+add_callback!(simulation, BasicTimeMessenger(), IterationInterval(100))
 
 u, v, w = model.velocities
 
+S = KernelFunctionOperation{Center, Center, Center}(strain_rate_tensor_modulus_ccc, model.grid, u, v, w)
+@show compute!(Field(S))
 
 ω = ∂x(v) - ∂y(u)
-s = sqrt(u^2 + v^2)
 ω̃ = KernelFunctionOperation{Face, Face, Center}(ℱxy²ᵟ, grid, ω)
-@show compute!(Field(ω̃))
 
-S = KernelFunctionOperation{Center, Center, Center}(strain_rate_tensor_modulus_ccc, model.grid, u, v, w)
+ū = KernelFunctionOperation{Face, Center, Center}(ℱxyz²ᵟ, grid, u)
+v̄ = KernelFunctionOperation{Center, Face, Center}(ℱxyz²ᵟ, grid, v)
+w̄ = KernelFunctionOperation{Center, Center, Face}(ℱxyz²ᵟ, grid, w)
+S̄ = KernelFunctionOperation{Center, Center, Center}(strain_rate_tensor_modulus_ccc, model.grid, ū, v̄, w̄)
 @show compute!(Field(S))
 
 
 # We pass these operations to an output writer below to calculate and output them during the simulation.
 filename = "two_dimensional_turbulence"
 
-simulation.output_writers[:fields] = JLD2OutputWriter(model, (; ω, s, ω̃),
+simulation.output_writers[:fields] = JLD2OutputWriter(model, (; ω, ω̃),
                                                       schedule = TimeInterval(0.6),
                                                       filename = filename * ".jld2",
                                                       overwrite_existing = true)
-
-# ## Running the simulation
-#
-# Pretty much just
 
 run!(simulation)
 
@@ -81,14 +96,12 @@ run!(simulation)
 
 ω_timeseries = FieldTimeSeries(filename * ".jld2", "ω")
 ω̃_timeseries = FieldTimeSeries(filename * ".jld2", "ω̃")
-s_timeseries = FieldTimeSeries(filename * ".jld2", "s")
 
 times = ω_timeseries.times
 
 # Construct the ``x, y, z`` grid for plotting purposes,
 
 xω, yω, zω = nodes(ω_timeseries)
-xs, ys, zs = nodes(s_timeseries)
 nothing #hide
 
 # and animate the vorticity and fluid speed.
@@ -116,7 +129,6 @@ n = Observable(1)
 
 ω = @lift interior(ω_timeseries[$n], :, :, 1)
 ω̃ = @lift interior(ω̃_timeseries[$n], :, :, 1)
-s = @lift interior(s_timeseries[$n], :, :, 1)
 
 heatmap!(ax_ω, xω, yω, ω; colormap = :balance, colorrange = (-2, 2))
 heatmap!(ax_s, xω, yω, ω̃; colormap = :balance, colorrange = (-2, 2))
@@ -125,18 +137,8 @@ heatmap!(ax_s, xω, yω, ω̃; colormap = :balance, colorrange = (-2, 2))
 title = @lift "t = " * string(round(times[$n], digits=2))
 Label(fig[1, 1:2], title, fontsize=24, tellwidth=false)
 
-current_figure() #hide
-fig
-
-# Finally, we record a movie.
-
 frames = 1:length(times)
-
 @info "Making a neat animation of vorticity and speed..."
-
 record(fig, filename * ".mp4", frames, framerate=24) do i
     n[] = i
 end
-nothing #hide
-
-# ![](two_dimensional_turbulence.mp4)
