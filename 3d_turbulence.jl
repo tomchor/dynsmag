@@ -50,9 +50,9 @@ S̄2 = KernelFunctionOperation{Center, Center, Center}(Σ̄ᵢⱼΣ̄ᵢⱼᶜ�
 @inline var"⟨|S|S₁₃⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) = ℑxzᶜᵃᶜ(i, j, k, grid, ℱ²ᵟ, var"|S|S₁₃ᶜᶜᶜ", u, v, w)
 @inline var"⟨|S|S₂₃⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) = ℑyzᵃᶜᶜ(i, j, k, grid, ℱ²ᵟ, var"|S|S₂₃ᶜᶜᶜ", u, v, w)
 
-@inline var"|S̄|S̄₁₁"(i, j, k, grid, u, v, w) = √(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶜᶜ(i, j, k, grid, u, v, w)) * Σ̄₁₁(i, j, k, grid, u, v, w) # ccc
-@inline var"|S̄|S̄₂₂"(i, j, k, grid, u, v, w) = √(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶜᶜ(i, j, k, grid, u, v, w)) * Σ̄₂₂(i, j, k, grid, u, v, w) # ccc
-@inline var"|S̄|S̄₃₃"(i, j, k, grid, u, v, w) = √(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶜᶜ(i, j, k, grid, u, v, w)) * Σ̄₃₃(i, j, k, grid, u, v, w) # ccc
+@inline var"|S̄|S̄₁₁ᶜᶜᶜ"(i, j, k, grid, u, v, w) = √(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶜᶜ(i, j, k, grid, u, v, w)) * Σ̄₁₁(i, j, k, grid, u, v, w) # ccc
+@inline var"|S̄|S̄₂₂ᶜᶜᶜ"(i, j, k, grid, u, v, w) = √(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶜᶜ(i, j, k, grid, u, v, w)) * Σ̄₂₂(i, j, k, grid, u, v, w) # ccc
+@inline var"|S̄|S̄₃₃ᶜᶜᶜ"(i, j, k, grid, u, v, w) = √(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶜᶜ(i, j, k, grid, u, v, w)) * Σ̄₃₃(i, j, k, grid, u, v, w) # ccc
 
 @inline var"|S̄|S̄₁₂ᶜᶜᶜ"(i, j, k, grid, u, v, w) = √(Σ̄ᵢⱼΣ̄ᵢⱼᶠᶠᶜ(i, j, k, grid, u, v, w)) * Σ̄₁₂(i, j, k, grid, u, v, w) # ffc
 @inline var"|S̄|S̄₁₃ᶜᶜᶜ"(i, j, k, grid, u, v, w) = √(Σ̄ᵢⱼΣ̄ᵢⱼᶠᶜᶠ(i, j, k, grid, u, v, w)) * Σ̄₁₃(i, j, k, grid, u, v, w) # fcf
@@ -60,19 +60,22 @@ S̄2 = KernelFunctionOperation{Center, Center, Center}(Σ̄ᵢⱼΣ̄ᵢⱼᶜ�
 
 
 @inline Δ(i, j, k, grid) = volume(i, j, k, grid, Center(), Center(), Center())
-M₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₁₁⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₁₁ᶜᶜᶜ"(i, j, k, grid, u, v, w))
-M₂₂ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₂₂⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₂₂ᶜᶜᶜ"(i, j, k, grid, u, v, w))
-M₃₃ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₃₃⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₃₃ᶜᶜᶜ"(i, j, k, grid, u, v, w))
+@inline M₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₁₁⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₁₁ᶜᶜᶜ"(i, j, k, grid, u, v, w))
+@inline M₂₂ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₂₂⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₂₂ᶜᶜᶜ"(i, j, k, grid, u, v, w))
+@inline M₃₃ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₃₃⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₃₃ᶜᶜᶜ"(i, j, k, grid, u, v, w))
 
-ϕψ(i, j, k, grid, ϕ, ψ) = ϕ[i, j, k] * ψ[i, j, k]
-u₁u₁ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕψ, u, u)
-u₂u₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑyᵃᶜᵃ(i, j, k, grid, ϕψ, v, v)
-u₃u₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑzᵃᵃᶜ(i, j, k, grid, ϕψ, w, w)
+@inline M₁₂ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₁₂⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₁₂ᶜᶜᶜ"(i, j, k, grid, u, v, w))
+@inline M₁₃ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₁₃⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₁₃ᶜᶜᶜ"(i, j, k, grid, u, v, w))
+@inline M₂₃ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₂₃⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₂₃ᶜᶜᶜ"(i, j, k, grid, u, v, w))
 
-ϕ̄ψ̄(i, j, k, grid, ϕ, ψ) = ℱ²ᵟ(i, j, k, grid, ϕ) * ℱ²ᵟ(i, j, k, grid, ψ)
-ū₁ū₁ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, u, u)
-ū₂ū₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, u, u)
-ū₃ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, u, u)
+function MᵢⱼMᵢⱼ_ccc(i, j, k, grid, u, v, w, p)
+    return (      M₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)^2
+            +     M₂₂ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)^2
+            +     M₃₃ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)^2
+            + 2 * M₁₂ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)^2
+            + 2 * M₁₃ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)^2
+            + 2 * M₂₃ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)^2)
+end
 
 L₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₁u₁, u, v, w) - ū₁ū₁ᶜᶜᶜ(i, j, k, grid, u, v, w)
 L₂₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₂u₂, u, v, w) - ū₂ū₂ᶜᶜᶜ(i, j, k, grid, u, v, w)
