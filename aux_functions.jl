@@ -12,7 +12,7 @@ AG = Oceananigans.Grids.AbstractGrid
 @inline ℱxy²ᵟ(i, j, k, grid, f, args...)  = ℱy²ᵟ(i, j, k, grid, ℱx²ᵟ, f, args...)
 @inline ℱyz²ᵟ(i, j, k, grid, f, args...)  = ℱz²ᵟ(i, j, k, grid, ℱy²ᵟ, f, args...)
 @inline ℱxz²ᵟ(i, j, k, grid, f, args...)  = ℱz²ᵟ(i, j, k, grid, ℱz²ᵟ, f, args...)
-@inline ℱxyz²ᵟ(i, j, k, grid, f, args...) = ℱz²ᵟ(i, j, k, grid, ℱxy²ᵟ, f, args...)
+@inline ℱ²ᵟ(i, j, k, grid, f, args...) = ℱz²ᵟ(i, j, k, grid, ℱxy²ᵟ, f, args...)
 
 
 #####
@@ -24,28 +24,28 @@ AG = Oceananigans.Grids.AbstractGrid
 @inline ∂y_v(i, j, k, grid, v) = ∂yᶜᶜᶜ(i, j, k, grid, v)
 @inline ∂z_w(i, j, k, grid, w) = ∂zᶜᶜᶜ(i, j, k, grid, w)
 
-@inline ∂x_ū(i, j, k, grid, u) = ∂xᶜᶜᶜ(i, j, k, grid, ℱxyz²ᵟ, u)
-@inline ∂y_v̄(i, j, k, grid, v) = ∂yᶜᶜᶜ(i, j, k, grid, ℱxyz²ᵟ, v)
-@inline ∂z_w̄(i, j, k, grid, w) = ∂zᶜᶜᶜ(i, j, k, grid, ℱxyz²ᵟ, w)
+@inline ∂x_ū(i, j, k, grid, u) = ∂xᶜᶜᶜ(i, j, k, grid, ℱ²ᵟ, u)
+@inline ∂y_v̄(i, j, k, grid, v) = ∂yᶜᶜᶜ(i, j, k, grid, ℱ²ᵟ, v)
+@inline ∂z_w̄(i, j, k, grid, w) = ∂zᶜᶜᶜ(i, j, k, grid, ℱ²ᵟ, w)
 
 # Off-diagonal
 @inline ∂x_v(i, j, k, grid, v) = ∂xᶠᶠᶜ(i, j, k, grid, v)
 @inline ∂x_w(i, j, k, grid, w) = ∂xᶠᶜᶜ(i, j, k, grid, w)
 
-@inline ∂x_v̄(i, j, k, grid, v) = ∂xᶠᶠᶜ(i, j, k, grid, ℱxyz²ᵟ, v)
-@inline ∂x_w̄(i, j, k, grid, w) = ∂xᶠᶜᶜ(i, j, k, grid, ℱxyz²ᵟ, w)
+@inline ∂x_v̄(i, j, k, grid, v) = ∂xᶠᶠᶜ(i, j, k, grid, ℱ²ᵟ, v)
+@inline ∂x_w̄(i, j, k, grid, w) = ∂xᶠᶜᶜ(i, j, k, grid, ℱ²ᵟ, w)
 
 @inline ∂y_u(i, j, k, grid, u) = ∂yᶠᶠᶜ(i, j, k, grid, u)
 @inline ∂y_w(i, j, k, grid, w) = ∂yᶜᶠᶜ(i, j, k, grid, w)
 
-@inline ∂y_ū(i, j, k, grid, u) = ∂yᶠᶠᶜ(i, j, k, grid, ℱxyz²ᵟ, u)
-@inline ∂y_w̄(i, j, k, grid, w) = ∂yᶜᶠᶜ(i, j, k, grid, ℱxyz²ᵟ, w)
+@inline ∂y_ū(i, j, k, grid, u) = ∂yᶠᶠᶜ(i, j, k, grid, ℱ²ᵟ, u)
+@inline ∂y_w̄(i, j, k, grid, w) = ∂yᶜᶠᶜ(i, j, k, grid, ℱ²ᵟ, w)
 
 @inline ∂z_u(i, j, k, grid, u) = ∂zᶠᶜᶠ(i, j, k, grid, u)
 @inline ∂z_v(i, j, k, grid, v) = ∂zᶜᶠᶠ(i, j, k, grid, v)
 
-@inline ∂z_ū(i, j, k, grid, u) = ∂zᶠᶜᶠ(i, j, k, grid, ℱxyz²ᵟ, u)
-@inline ∂z_v̄(i, j, k, grid, v) = ∂zᶜᶠᶠ(i, j, k, grid, ℱxyz²ᵟ, v)
+@inline ∂z_ū(i, j, k, grid, u) = ∂zᶠᶜᶠ(i, j, k, grid, ℱ²ᵟ, u)
+@inline ∂z_v̄(i, j, k, grid, v) = ∂zᶜᶠᶠ(i, j, k, grid, ℱ²ᵟ, v)
 
 #####
 ##### Strain components
@@ -222,11 +222,11 @@ function strain_rate_tensor_modulus_ccc(i, j, k, grid, u, v, w)
 end
 
 
-@inline fψ̄_plus_gφ̄²(i, j, k, grid, f, ψ, g, φ) = (f(i, j, k, grid, ℱxyz²ᵟ, ψ) + g(i, j, k, grid, ℱxyz²ᵟ, φ))^2
+@inline fψ̄_plus_gφ̄²(i, j, k, grid, f, ψ, g, φ) = (f(i, j, k, grid, ℱ²ᵟ, ψ) + g(i, j, k, grid, ℱ²ᵟ, φ))^2
 function filtered_strain_rate_tensor_modulus_ccc(i, j, k, grid, u, v, w)
-    Sˣˣ² = ∂xᶜᶜᶜ(i, j, k, grid, ℱxyz²ᵟ, u)^2
-    Sʸʸ² = ∂yᶜᶜᶜ(i, j, k, grid, ℱxyz²ᵟ, v)^2
-    Sᶻᶻ² = ∂zᶜᶜᶜ(i, j, k, grid, ℱxyz²ᵟ, w)^2
+    Sˣˣ² = ∂xᶜᶜᶜ(i, j, k, grid, ℱ²ᵟ, u)^2
+    Sʸʸ² = ∂yᶜᶜᶜ(i, j, k, grid, ℱ²ᵟ, v)^2
+    Sᶻᶻ² = ∂zᶜᶜᶜ(i, j, k, grid, ℱ²ᵟ, w)^2
 
     Sˣʸ² = ℑxyᶜᶜᵃ(i, j, k, grid, fψ_plus_gφ², ∂yᶠᶠᶜ, u, ∂xᶠᶠᶜ, v) / 4
     Sˣᶻ² = ℑxzᶜᵃᶜ(i, j, k, grid, fψ_plus_gφ², ∂zᶠᶜᶠ, u, ∂xᶠᶜᶠ, w) / 4
