@@ -109,10 +109,6 @@ AG = Oceananigans.Grids.AbstractGrid
 @inline Σ̄₁₃(i, j, k, grid, u, v, w) = Σ̄₁₃(i, j, k, grid, u, w)
 @inline Σ̄₂₃(i, j, k, grid, u, v, w) = Σ̄₂₃(i, j, k, grid, v, w)
 
-# Symmetry relations
-const Σ₂₁ = Σ₁₂
-const Σ₃₁ = Σ₁₃
-const Σ₃₂ = Σ₂₃
 
 # Trace and squared strains
 @inline tr_Σ²(ijk...) = Σ₁₁(ijk...)^2 +  Σ₂₂(ijk...)^2 +  Σ₃₃(ijk...)^2
