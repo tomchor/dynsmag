@@ -78,8 +78,8 @@ function MᵢⱼMᵢⱼ_ccc(i, j, k, grid, u, v, w, p)
 end
 
 
-MijMᵢⱼ = KernelFunctionOperation{Center, Center, Center}(MᵢⱼMᵢⱼ_ccc, model.grid, u, v, w, (; α = 2, β = 1))
-#@show compute!(Field(MijMᵢⱼ))
+MᵢⱼMᵢⱼ = KernelFunctionOperation{Center, Center, Center}(MᵢⱼMᵢⱼ_ccc, model.grid, u, v, w, (; α = 2, β = 1))
+@show compute!(Field(MᵢⱼMᵢⱼ))
 
 
 @inline ϕψ(i, j, k, grid, ϕ, ψ) = ϕ[i, j, k] * ψ[i, j, k]
@@ -122,9 +122,8 @@ end
 LᵢⱼMᵢⱼ = KernelFunctionOperation{Center, Center, Center}(LᵢⱼMᵢⱼ_ccc, model.grid, u, v, w, (; α = 2, β = 1))
 @show compute!(Field(LᵢⱼMᵢⱼ))
 
-
-pause
-
+cₛ = Field(√(Field(Average(LᵢⱼMᵢⱼ)) / Field(Average(MᵢⱼMᵢⱼ))))
+get_cₛ(model) = compute!(cₛ)[1,1,1]
 
 #+++ Set up simulation
 @info "Setting up simulation"
@@ -138,9 +137,10 @@ add_callback!(simulation, BasicTimeMessenger(), IterationInterval(100))
 #+++ Writer and run!
 @info "Setting up writer"
 filename = "two_dimensional_turbulence"
-simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, ū, v̄, w̄, ω, ω̃, S, S̄, S̄2),
+simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, ū, v̄, w̄, ω, ω̃, S, S̄, S̄2, LᵢⱼMᵢⱼ, MijMᵢⱼ, cₛ=get_cₛ),
                                                       schedule = TimeInterval(0.6),
                                                       filename = filename * ".jld2",
+                                                      dimensions = Dict("cₛ" => (),)
                                                       overwrite_existing = true)
 @info "Start running"
 run!(simulation)
