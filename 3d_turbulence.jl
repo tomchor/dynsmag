@@ -25,10 +25,10 @@ ū = KernelFunctionOperation{Face, Center, Center}(ℱ²ᵟ, grid, u)
 v̄ = KernelFunctionOperation{Center, Face, Center}(ℱ²ᵟ, grid, v)
 w̄ = KernelFunctionOperation{Center, Center, Face}(ℱ²ᵟ, grid, w)
 
-S = KernelFunctionOperation{Center, Center, Center}(strain_rate_tensor_modulus_ccc, model.grid, u, v, w)
-S̄ = KernelFunctionOperation{Center, Center, Center}(strain_rate_tensor_modulus_ccc, model.grid, ū, v̄, w̄)
-#S̄ = KernelFunctionOperation{Center, Center, Center}(filtered_strain_rate_tensor_modulus_ccc, model.grid, u, v, w)
-S̄2 = KernelFunctionOperation{Center, Center, Center}(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶜᶜ, model.grid, u, v, w)
+S = KernelFunctionOperation{Center, Center, Center}(ΣᵢⱼΣᵢⱼᶜᶜᶜ, model.grid, u, v, w)
+S̄ = KernelFunctionOperation{Center, Center, Center}(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶜᶜ, model.grid, u, v, w)
+S̄2 = KernelFunctionOperation{Center, Center, Center}(filtered_strain_rate_tensor_modulus_ccc, model.grid, u, v, w)
+#S̄2 = KernelFunctionOperation{Center, Center, Center}(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶜᶜ, model.grid, u, v, w)
 @show compute!(Field(S))
 @show compute!(Field(S̄))
 @show compute!(Field(S̄2))
@@ -89,8 +89,8 @@ MᵢⱼMᵢⱼ = KernelFunctionOperation{Center, Center, Center}(MᵢⱼMᵢⱼ_
 
 @inline ϕ̄ψ̄(i, j, k, grid, ϕ, ψ) = ℱ²ᵟ(i, j, k, grid, ϕ) * ℱ²ᵟ(i, j, k, grid, ψ)
 @inline ū₁ū₁ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, u, u)
-@inline ū₂ū₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, u, u)
-@inline ū₃ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, u, u)
+@inline ū₂ū₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, v, v)
+@inline ū₃ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, w, w)
 
 @inline u₁u₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, u) * ℑyᵃᶜᵃ(i, j, k, grid, v)
 @inline u₁u₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, u) * ℑzᵃᵃᶜ(i, j, k, grid, w)
@@ -137,7 +137,7 @@ add_callback!(simulation, BasicTimeMessenger(), IterationInterval(100))
 #+++ Writer and run!
 @info "Setting up writer"
 filename = "two_dimensional_turbulence"
-simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, ū, v̄, w̄, ω, ω̃, S, S̄, S̄2, LᵢⱼMᵢⱼ, MijMᵢⱼ,),
+simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, ū, v̄, w̄, ω, ω̃, S, S̄, S̄2, LᵢⱼMᵢⱼ, MᵢⱼMᵢⱼ,),
                                                       schedule = TimeInterval(0.6),
                                                       filename = filename * ".jld2",
                                                       overwrite_existing = true)
@@ -151,6 +151,8 @@ run!(simulation)
 S_timeseries = FieldTimeSeries(filename * ".jld2", "S")
 S̄_timeseries = FieldTimeSeries(filename * ".jld2", "S̄")
 S̄2_timeseries = FieldTimeSeries(filename * ".jld2", "S̄2")
+LM_timeseries = FieldTimeSeries(filename * ".jld2", "LᵢⱼMᵢⱼ")
+MM_timeseries = FieldTimeSeries(filename * ".jld2", "MᵢⱼMᵢⱼ")
 
 times = ω_timeseries.times
 
@@ -178,10 +180,12 @@ n = Observable(1)
 S = @lift interior(S_timeseries[$n], :, :, 1)
 S̄ = @lift interior(S̄_timeseries[$n], :, :, 1)
 S̄2 = @lift interior(S̄2_timeseries[$n], :, :, 1)
+LM = @lift interior(LM_timeseries[$n], :, :, 1)
+MM = @lift interior(MM_timeseries[$n], :, :, 1)
 
 heatmap!(ax_1, xω, yω, ω; colormap = :balance, colorrange = (-2, 2))
 #heatmap!(ax_2, xω, yω, ω̃; colormap = :balance, colorrange = (-2, 2))
-heatmap!(ax_2, xc, yc, S̄2; colormap = :speed, colorrange = (0, 3))
+heatmap!(ax_2, xc, yc, LM; colormap = :balance, colorrange = (-1e-9, 1e-9))
 heatmap!(ax_3, xc, yc, S; colormap = :speed, colorrange = (0, 3))
 heatmap!(ax_4, xc, yc, S̄; colormap = :speed, colorrange = (0, 3))
 
