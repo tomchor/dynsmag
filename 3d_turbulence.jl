@@ -137,10 +137,9 @@ add_callback!(simulation, BasicTimeMessenger(), IterationInterval(100))
 #+++ Writer and run!
 @info "Setting up writer"
 filename = "two_dimensional_turbulence"
-simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, ū, v̄, w̄, ω, ω̃, S, S̄, S̄2, LᵢⱼMᵢⱼ, MijMᵢⱼ, cₛ=get_cₛ),
+simulation.output_writers[:fields] = JLD2OutputWriter(model, (; u, v, w, ū, v̄, w̄, ω, ω̃, S, S̄, S̄2, LᵢⱼMᵢⱼ, MijMᵢⱼ,),
                                                       schedule = TimeInterval(0.6),
                                                       filename = filename * ".jld2",
-                                                      dimensions = Dict("cₛ" => (),)
                                                       overwrite_existing = true)
 @info "Start running"
 run!(simulation)
