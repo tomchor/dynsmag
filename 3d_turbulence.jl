@@ -77,81 +77,52 @@ function MᵢⱼMᵢⱼ_ccc(i, j, k, grid, u, v, w, p)
             + 2 * M₂₃ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)^2)
 end
 
-L₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₁u₁, u, v, w) - ū₁ū₁ᶜᶜᶜ(i, j, k, grid, u, v, w)
-L₂₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₂u₂, u, v, w) - ū₂ū₂ᶜᶜᶜ(i, j, k, grid, u, v, w)
-L₃₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₃u₃, u, v, w) - ū₃ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w)
+
+MijMᵢⱼ = KernelFunctionOperation{Center, Center, Center}(MᵢⱼMᵢⱼ_ccc, model.grid, u, v, w, (; α = 2, β = 1))
+#@show compute!(Field(MijMᵢⱼ))
+
+
+@inline ϕψ(i, j, k, grid, ϕ, ψ) = ϕ[i, j, k] * ψ[i, j, k]
+@inline u₁u₁ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕψ, u, u)
+@inline u₂u₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑyᵃᶜᵃ(i, j, k, grid, ϕψ, v, v)
+@inline u₃u₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑzᵃᵃᶜ(i, j, k, grid, ϕψ, w, w)
+
+@inline ϕ̄ψ̄(i, j, k, grid, ϕ, ψ) = ℱ²ᵟ(i, j, k, grid, ϕ) * ℱ²ᵟ(i, j, k, grid, ψ)
+@inline ū₁ū₁ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, u, u)
+@inline ū₂ū₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, u, u)
+@inline ū₃ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ϕ̄ψ̄, u, u)
+
+@inline u₁u₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, u) * ℑyᵃᶜᵃ(i, j, k, grid, v)
+@inline u₁u₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, u) * ℑzᵃᵃᶜ(i, j, k, grid, w)
+@inline u₂u₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑyᵃᶜᵃ(i, j, k, grid, v) * ℑzᵃᵃᶜ(i, j, k, grid, w)
+
+@inline ū₁ū₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ℱ²ᵟ, u) * ℑyᵃᶜᵃ(i, j, k, grid, ℱ²ᵟ, v)
+@inline ū₁ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑxᶜᵃᵃ(i, j, k, grid, ℱ²ᵟ, u) * ℑzᵃᵃᶜ(i, j, k, grid, ℱ²ᵟ, w)
+@inline ū₂ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℑyᵃᶜᵃ(i, j, k, grid, ℱ²ᵟ, v) * ℑzᵃᵃᶜ(i, j, k, grid, ℱ²ᵟ, w)
+
+@inline L₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₁u₁ᶜᶜᶜ, u, v, w) - ū₁ū₁ᶜᶜᶜ(i, j, k, grid, u, v, w)
+@inline L₂₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₂u₂ᶜᶜᶜ, u, v, w) - ū₂ū₂ᶜᶜᶜ(i, j, k, grid, u, v, w)
+@inline L₃₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₃u₃ᶜᶜᶜ, u, v, w) - ū₃ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w)
+
+@inline L₁₂ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₁u₂ᶜᶜᶜ, u, v, w) - ū₁ū₂ᶜᶜᶜ(i, j, k, grid, u, v, w)
+@inline L₁₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₁u₃ᶜᶜᶜ, u, v, w) - ū₁ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w)
+@inline L₂₃ᶜᶜᶜ(i, j, k, grid, u, v, w) = ℱ²ᵟ(i, j, k, grid, u₂u₃ᶜᶜᶜ, u, v, w) - ū₂ū₃ᶜᶜᶜ(i, j, k, grid, u, v, w)
 
 function LᵢⱼMᵢⱼ_ccc(i, j, k, grid, u, v, w, p)
-    S_abs = strain_rate_tensor_modulus_ccc(i, j, k, grid, u, v, w)
-    S̄_abs = filtered_strain_rate_tensor_modulus_ccc(i, j, k, grid, u, v, w)
-    a = M₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)
+    LᵢⱼMᵢⱼ =  (      L₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w) * M₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)
+               +     L₂₂ᶜᶜᶜ(i, j, k, grid, u, v, w) * M₂₂ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)
+               +     L₃₃ᶜᶜᶜ(i, j, k, grid, u, v, w) * M₃₃ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1)
+               + 2 * L₁₂ᶜᶜᶜ(i, j, k, grid, u, v, w) * M₁₂ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1) 
+               + 2 * L₁₃ᶜᶜᶜ(i, j, k, grid, u, v, w) * M₁₃ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1) 
+               + 2 * L₂₃ᶜᶜᶜ(i, j, k, grid, u, v, w) * M₂₃ᶜᶜᶜ(i, j, k, grid, u, v, w, 2, 1) )
 
-
-    var"⟨|S|S₁₁⟩" = ℱ²ᵟ(i, j, k, grid, var"|S|S₁₁", u, v, w)
-    var"⟨|S|S₂₂⟩" = ℱ²ᵟ(i, j, k, grid, var"|S|S₂₂", u, v, w)
-    var"⟨|S|S₃₃⟩" = ℱ²ᵟ(i, j, k, grid, var"|S|S₃₃", u, v, w)
-
-    var"⟨|S|S₁₂⟩" = ℑxyᶜᶜᵃ(i, j, k, grid, ℱ²ᵟ, var"|S|S₁₂", u, v, w)
-    var"⟨|S|S₁₃⟩" = ℑxzᶜᵃᶜ(i, j, k, grid, ℱ²ᵟ, var"|S|S₁₃", u, v, w)
-    var"⟨|S|S₂₃⟩" = ℑyzᵃᶜᶜ(i, j, k, grid, ℱ²ᵟ, var"|S|S₂₃", u, v, w)
-
-
-    var"α²β|S̄|S̄₁₁" = p.α^2 * p.β * var"|S̄|S̄₁₁"(i, j, k, grid, u, v, w)
-    var"α²β|S̄|S̄₂₂" = p.α^2 * p.β * var"|S̄|S̄₂₂"(i, j, k, grid, u, v, w)
-    var"α²β|S̄|S̄₃₃" = p.α^2 * p.β * var"|S̄|S̄₃₃"(i, j, k, grid, u, v, w)
-
-    var"α²β|S̄|S̄₁₂" = p.α^2 * p.β * ℑxyᶜᶜᵃ(i, j, k, grid, var"|S̄|S̄₁₂", u, v, w)
-    var"α²β|S̄|S̄₁₃" = p.α^2 * p.β * ℑxzᶜᵃᶜ(i, j, k, grid, var"|S̄|S̄₁₃", u, v, w)
-    var"α²β|S̄|S̄₂₃" = p.α^2 * p.β * ℑyzᵃᶜᶜ(i, j, k, grid, var"|S̄|S̄₂₃", u, v, w)
-
-    LᵢⱼMᵢⱼ =   (var"⟨|S|S₁₁⟩" - var"α²β|S̄|S̄₁₁")^2
-             + (var"⟨|S|S₂₂⟩" - var"α²β|S̄|S̄₂₂")^2
-             + (var"⟨|S|S₃₃⟩" - var"α²β|S̄|S̄₃₃")^2
-             + 2*(var"⟨|S|S₁₁⟩" - var"α²β|S̄|S̄₁₁")^2
-             + 2*(var"⟨|S|S₂₂⟩" - var"α²β|S̄|S̄₂₂")^2
-             + 2*(var"⟨|S|S₃₃⟩" - var"α²β|S̄|S̄₃₃")^2
-
-    Δ = volume(i, j, k, grid, Center(), Center(), Center())
     return LᵢⱼMᵢⱼ
 end
 
 LᵢⱼMᵢⱼ = KernelFunctionOperation{Center, Center, Center}(LᵢⱼMᵢⱼ_ccc, model.grid, u, v, w, (; α = 2, β = 1))
 @show compute!(Field(LᵢⱼMᵢⱼ))
-pause
-
-function MᵢⱼMᵢⱼ_ccc(i, j, k, grid, u, v, w, p)
-    S_abs = strain_rate_tensor_modulus_ccc(i, j, k, grid, u, v, w)
-    S̄_abs = filtered_strain_rate_tensor_modulus_ccc(i, j, k, grid, u, v, w)
-
-    var"⟨|S|S₁₁⟩" = ℱ²ᵟ(i, j, k, grid, var"|S|S₁₁", u, v, w)
-    var"⟨|S|S₂₂⟩" = ℱ²ᵟ(i, j, k, grid, var"|S|S₂₂", u, v, w)
-    var"⟨|S|S₃₃⟩" = ℱ²ᵟ(i, j, k, grid, var"|S|S₃₃", u, v, w)
-
-    var"⟨|S|S₁₂⟩" = ℑxyᶜᶜᵃ(i, j, k, grid, ℱ²ᵟ, var"|S|S₁₂", u, v, w)
-    var"⟨|S|S₁₃⟩" = ℑxzᶜᵃᶜ(i, j, k, grid, ℱ²ᵟ, var"|S|S₁₃", u, v, w)
-    var"⟨|S|S₂₃⟩" = ℑyzᵃᶜᶜ(i, j, k, grid, ℱ²ᵟ, var"|S|S₂₃", u, v, w)
 
 
-    var"α²β|S̄|S̄₁₁" = p.α^2 * p.β * var"|S̄|S̄₁₁"(i, j, k, grid, u, v, w)
-    var"α²β|S̄|S̄₂₂" = p.α^2 * p.β * var"|S̄|S̄₂₂"(i, j, k, grid, u, v, w)
-    var"α²β|S̄|S̄₃₃" = p.α^2 * p.β * var"|S̄|S̄₃₃"(i, j, k, grid, u, v, w)
-
-    var"α²β|S̄|S̄₁₂" = p.α^2 * p.β * ℑxyᶜᶜᵃ(i, j, k, grid, var"|S̄|S̄₁₂", u, v, w)
-    var"α²β|S̄|S̄₁₃" = p.α^2 * p.β * ℑxzᶜᵃᶜ(i, j, k, grid, var"|S̄|S̄₁₃", u, v, w)
-    var"α²β|S̄|S̄₂₃" = p.α^2 * p.β * ℑyzᵃᶜᶜ(i, j, k, grid, var"|S̄|S̄₂₃", u, v, w)
-
-    Δ = volume(i, j, k, grid, Center(), Center(), Center())
-    return 4 * Δ^4 * (  (var"⟨|S|S₁₁⟩" - var"α²β|S̄|S̄₁₁")^2
-                      + (var"⟨|S|S₂₂⟩" - var"α²β|S̄|S̄₂₂")^2
-                      + (var"⟨|S|S₃₃⟩" - var"α²β|S̄|S̄₃₃")^2
-                      + 2*(var"⟨|S|S₁₁⟩" - var"α²β|S̄|S̄₁₁")^2
-                      + 2*(var"⟨|S|S₂₂⟩" - var"α²β|S̄|S̄₂₂")^2
-                      + 2*(var"⟨|S|S₃₃⟩" - var"α²β|S̄|S̄₃₃")^2)
-end
-
-
-MijMᵢⱼ = KernelFunctionOperation{Center, Center, Center}(MᵢⱼMᵢⱼ_ccc, model.grid, u, v, w, (; α = 2, β = 1))
-@show compute!(Field(MijMᵢⱼ))
 pause
 
 
