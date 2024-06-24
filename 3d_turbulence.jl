@@ -59,7 +59,7 @@ S̄2 = KernelFunctionOperation{Center, Center, Center}(filtered_strain_rate_tens
 @inline var"|S̄|S̄₂₃ᶜᶜᶜ"(i, j, k, grid, u, v, w) = √(Σ̄ᵢⱼΣ̄ᵢⱼᶜᶠᶠ(i, j, k, grid, u, v, w)) * Σ̄₂₃(i, j, k, grid, u, v, w) # cff
 
 
-@inline Δ(i, j, k, grid) = volume(i, j, k, grid, Center(), Center(), Center())
+@inline Δ(i, j, k, grid) = ∛volume(i, j, k, grid, Center(), Center(), Center())
 @inline M₁₁ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₁₁⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₁₁ᶜᶜᶜ"(i, j, k, grid, u, v, w))
 @inline M₂₂ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₂₂⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₂₂ᶜᶜᶜ"(i, j, k, grid, u, v, w))
 @inline M₃₃ᶜᶜᶜ(i, j, k, grid, u, v, w, α, β) = 2*Δ(i, j, k, grid)^2 * (var"⟨|S|S₃₃⟩ᶜᶜᶜ"(i, j, k, grid, u, v, w) - α^2*β * var"|S̄|S̄₃₃ᶜᶜᶜ"(i, j, k, grid, u, v, w))
